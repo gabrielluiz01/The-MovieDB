@@ -3,20 +3,28 @@ import React, {Component} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 
+// Api
+import api from '../api';
+import {api_key} from '../api';
+
 // Images
 import StarIcon from '../assets/star.png';
 
 // Redux
-import { getMoviesThunk } from '../dataflow/thunks/app-thunk'; 
+import { getMoviesThunk, searchMoviesThunk, detailsMoviesThunk } from '../dataflow/thunks/app-thunk'; 
 
 // Map State
 const mapStateToProps = state => ({
   movies: state.content.movies,
+  filteredMovies: state.content.filteredMovies,
+  detailsMovies: state.content.detailsMovies,
 });
 
 // Map Dispatch
 const mapDispatchToProps = dispatch => ({
   getMoviesThunk: info => dispatch(getMoviesThunk(info)),
+  searchMoviesThunk: info => dispatch(searchMoviesThunk(info)),
+  detailsMoviesThunk: info => dispatch(detailsMoviesThunk(info)),
 });
 
 // Styled 
@@ -159,42 +167,28 @@ class Layout extends Component{
     load: false,
     search: '',
     searching: false,
-    filtered: undefined,
-    hovered: false,
   }
 
   componentDidMount() {
     this.props.getMoviesThunk('popular');
   }
 
-  loadMovies = () => {
-    this.setState({
-      load: true,
-    })
+  handleClick = (item) => {
+    this.props.detailsMoviesThunk(item.id);
+    console.log('teste', this.props.detailsMovies)
   }
 
+
   handleChangeFilter = (ev) => {
+    const {search} = this.state;
     this.setState({
       search: ev.target.value,
     });
-
-    const movies = (this.state.search !== '' && this.state.searching === true) 
-    ? this.props.movies.filter(item => item.title.match(new RegExp(this.state.search, 'i'))) 
-    : this.props.movies;
-
-    this.setState({
-      filtered: movies,
-      searching: true,
-    })
-    if(this.state.search === ''){
-      this.setState({
-        searching: false,
-      })
-    }
+    this.props.searchMoviesThunk(search)
   }
 
   render() {
-    console.log('filmes', this.props.movies)
+    console.log('filmes', this.props.detailsMovies)
     return (
       <Content>
         <ContainerTitle>Filmes</ContainerTitle>
@@ -207,8 +201,8 @@ class Layout extends Component{
           <ButtonFilter type="submit">Pesquisar</ButtonFilter>
         </Form>
         <Container load={this.state.load}>
-          {this.state.searching ? (
-            this.state.filtered.map(item => (
+          {this.state.search.length > 0 ? (
+            this.props.filteredMovies.map(item => (
               <BoxMovies key={item.id}>
   
                 <ImageMovie src={item.poster_path} />
@@ -222,7 +216,7 @@ class Layout extends Component{
             ))
           ) : (
             this.props.movies.map(item => (
-              <BoxMovies key={item.id}>
+              <BoxMovies key={item.id} onClick={() => this.handleClick(item)}>
   
                 <ImageMovie src={item.poster_path} />
                 <BoxAverage>

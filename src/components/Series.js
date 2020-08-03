@@ -7,16 +7,20 @@ import { connect } from 'react-redux';
 import StarIcon from '../assets/star.png';
 
 // Redux
-import { getSeriesThunk } from '../dataflow/thunks/app-thunk';
+import { getSeriesThunk, searchSeriesThunk, detailsSeriesThunk } from '../dataflow/thunks/app-thunk';
 
 // Map State
 const mapStateToProps = state => ({
   series: state.content.series,
+  filteredSeries: state.content.filteredSeries,
+  detailsSeries: state.content.detailsSeries,
 });
 
 // Map Dispatch
 const mapDispatchToProps = dispatch => ({
-  getSeriesThunk: info => dispatch(getSeriesThunk(info))
+  getSeriesThunk: info => dispatch(getSeriesThunk(info)),
+  searchSeriesThunk: info => dispatch(searchSeriesThunk(info)),
+  detailsSeriesThunk: info => dispatch(detailsSeriesThunk(info)),
 })
 
 // Styled 
@@ -161,6 +165,7 @@ class Series extends Component{
     searching: false,
     filtered: undefined,
     hovered: false,
+    details: false,
   }
 
   componentDidMount() {
@@ -174,68 +179,81 @@ class Series extends Component{
   }
 
   handleChangeFilter = (ev) => {
+    const {search} = this.state;
     this.setState({
       search: ev.target.value,
     });
+    this.props.searchSeriesThunk(search)
+  }
 
-    const series = (this.state.search !== '' && this.state.searching === true) 
-    ? this.props.series.filter(item => item.original_name.match(new RegExp(this.state.search, 'i'))) 
-    : this.props.series;
-
-    if(this.state.search === ''){
-      this.setState({
-        searching: false,
-      })
-    }
-
+  handleClick = (item) => {
+    this.props.detailsSeriesThunk(item.id)
     this.setState({
-      filtered: series,
-      searching: true,
+      details: true,
     })
   }
 
+  renderDetails = () => {
+    this.props.detailsSeries.map(data => {
+      console.log(data.original_name)
+      return(
+      <div>
+        <BoxAverage>
+          <Star src={StarIcon}/>
+          <AverageVote>{data.original_name}</AverageVote>
+        </BoxAverage>
+      </div>
+    )})
+  }
+
   render() {
-    console.log('series', this.props.series)
+    console.log(this.props.detailsSeries)
     return (
       <Content>
-        <ContainerTitle>Series</ContainerTitle>
-        <Form>
-          <InputFilter 
-            type="text" 
-            placeholder="buscar series" 
-            onChange={this.handleChangeFilter}
-          />
-          <ButtonFilter type="submit">Pesquisar</ButtonFilter>
-        </Form>
-        <Container load={this.state.load}>
-          {this.state.searching ? (
-            this.state.filtered.map(item => (
-              <BoxMovies key={item.id}>
-  
-                <ImageMovie src={item.poster_path} />
-                <BoxAverage>
-                  <Star src={StarIcon}/>
-                  <AverageVote>{item.vote_average}</AverageVote>
-                </BoxAverage>
-                <TitleMovie>{item.original_name}</TitleMovie>
-                <Synopsis>{item.overview}</Synopsis>
-              </BoxMovies>
-            ))
-          ) : (
-            this.props.series.map(item => (
-              <BoxMovies key={item.id}>
-  
-                <ImageMovie src={item.poster_path} />
-                <BoxAverage>
-                  <Star src={StarIcon}/>
-                  <AverageVote>{item.vote_average}</AverageVote>
-                </BoxAverage>
-                <TitleMovie>{item.original_name}</TitleMovie>
-                <Synopsis>{item.overview}</Synopsis>
-              </BoxMovies>
-            ))
-          )}
-        </Container>
+        {this.state.details ? (
+          this.renderDetails()
+        ) : (
+        <>
+          <ContainerTitle>Series</ContainerTitle>
+          <Form>
+            <InputFilter 
+              type="text" 
+              placeholder="buscar series" 
+              onChange={this.handleChangeFilter}
+            />
+            <ButtonFilter type="submit">Pesquisar</ButtonFilter>
+          </Form>
+          <Container load={this.state.load}>
+            {this.state.search.length > 0 ? (
+              this.props.filteredSeries.map(item => (
+                <BoxMovies key={item.id}>
+    
+                  <ImageMovie src={item.poster_path} />
+                  <BoxAverage>
+                    <Star src={StarIcon}/>
+                    <AverageVote>{item.vote_average}</AverageVote>
+                  </BoxAverage>
+                  <TitleMovie>{item.original_name}</TitleMovie>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxMovies>
+              ))
+            ) : (
+              this.props.series.map(item => (
+                <BoxMovies key={item.id} onClick={() => this.handleClick(item)}>
+    
+                  <ImageMovie src={item.poster_path} />
+                  <BoxAverage>
+                    <Star src={StarIcon}/>
+                    <AverageVote>{item.vote_average}</AverageVote>
+                  </BoxAverage>
+                  <TitleMovie>{item.original_name}</TitleMovie>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxMovies>
+              ))
+            )}
+          </Container>
+        </>
+        )}
       </Content>
     );
   }
