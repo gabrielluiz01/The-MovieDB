@@ -25,17 +25,19 @@ const Content = styled.div`
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #007EBD;
+  background: #141414;
+  padding-left: 2rem;
+  padding-bottom: 1rem;
 `;
 
 const Container = styled.div`
   width: 100%;
-  height: 80vh;
+  height: 100vh;
   overflow-y: scroll;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-gap: 40px;
-  background: #007EBD;
+  background: #141414;
   padding: 1rem;
 
   ::-webkit-scrollbar{
@@ -53,6 +55,7 @@ const Container = styled.div`
 
 const ContainerTitle = styled.h1`
   margin-left: 1rem;
+  color: #FFF;
 `;
 
 const BoxMovies = styled.div`
@@ -85,6 +88,7 @@ const TitleMovie = styled.h1`
   width: 100%;
   margin-left: .5rem;
   font-size: 1.3rem;
+  color: #FFF;
 `;
 
 const Synopsis = styled.p`
@@ -93,6 +97,7 @@ const Synopsis = styled.p`
   align-self: center;
   text-overflow: ellipsis;
   overflow: hidden;
+  color: #FFF;
 `;
 
 const BoxAverage = styled.span`
@@ -117,10 +122,45 @@ const Star = styled.img`
   bottom: 2rem;
 `;
 
+
+const Form = styled.form`
+  width: auto;
+  padding: 1rem;
+`;
+
+const InputFilter = styled.input`
+  width: 13rem;
+  height: 2rem;
+  border: 1px solid #BCBCBC;
+  margin-right: 1rem;
+  padding: 0 1rem;
+  border-radius: 6px;
+`;
+
+const ButtonFilter = styled.button`
+  height: 2rem;
+  background: #C10A13;
+  border-radius: 6px;
+  border: none;
+  padding: 0 0.5rem;
+  color: #FFF;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-align: center;
+
+  :hover{
+    opacity:0.7;
+  }
+`;
+
 class Layout extends Component{
 
   state = {
     load: false,
+    search: '',
+    searching: false,
+    filtered: undefined,
+    hovered: false,
   }
 
   componentDidMount() {
@@ -133,22 +173,66 @@ class Layout extends Component{
     })
   }
 
+  handleChangeFilter = (ev) => {
+    this.setState({
+      search: ev.target.value,
+    });
+
+    const movies = (this.state.search !== '' && this.state.searching === true) 
+    ? this.props.movies.filter(item => item.title.match(new RegExp(this.state.search, 'i'))) 
+    : this.props.movies;
+
+    this.setState({
+      filtered: movies,
+      searching: true,
+    })
+    if(this.state.search === ''){
+      this.setState({
+        searching: false,
+      })
+    }
+  }
+
   render() {
     return (
       <Content>
         <ContainerTitle>Filmes</ContainerTitle>
+        <Form>
+          <InputFilter 
+            type="text" 
+            placeholder="buscar filmes" 
+            onChange={this.handleChangeFilter}
+          />
+          <ButtonFilter type="submit">Pesquisar</ButtonFilter>
+        </Form>
         <Container load={this.state.load}>
-          {this.props.movies.map(item => (
-            <BoxMovies key={item.id}>
-              <ImageMovie src={item.poster_path} />
-              <BoxAverage>
-                <Star src={StarIcon}/>
-                <AverageVote>{item.vote_average}</AverageVote>
-              </BoxAverage>
-              <TitleMovie>{item.title}</TitleMovie>
-              {/* <Synopsis>{item.overview}</Synopsis> */}
-            </BoxMovies>
-          ))}
+          {this.state.searching ? (
+            this.state.filtered.map(item => (
+              <BoxMovies key={item.id}>
+  
+                <ImageMovie src={item.poster_path} />
+                <BoxAverage>
+                  <Star src={StarIcon}/>
+                  <AverageVote>{item.vote_average}</AverageVote>
+                </BoxAverage>
+                <TitleMovie>{item.title}</TitleMovie>
+                <Synopsis>{item.overview}</Synopsis>
+              </BoxMovies>
+            ))
+          ) : (
+            this.props.movies.map(item => (
+              <BoxMovies key={item.id}>
+  
+                <ImageMovie src={item.poster_path} />
+                <BoxAverage>
+                  <Star src={StarIcon}/>
+                  <AverageVote>{item.vote_average}</AverageVote>
+                </BoxAverage>
+                <TitleMovie>{item.title}</TitleMovie>
+                <Synopsis>{item.overview}</Synopsis>
+              </BoxMovies>
+            ))
+          )}
         </Container>
       </Content>
     );
