@@ -2,21 +2,21 @@ import api from '../../api';
 import { getMovies, getSeries } from '../modules/app-module';
 import { api_key } from '../../api';
 
-const getMoviesMethod = () =>
+const getMoviesMethod = (type) =>
   api({
     method: 'get',
-    url: `/movie/popular?api_key=${api_key}`,
+    url: `/movie/${type}?api_key=${api_key}`,
   });
 
-const getSeriesMethod = () =>
+const getSeriesMethod = (type) =>
   api({
     method: 'get',
-    url: `/tv/popular?api_key=${api_key}`,
+    url: `/tv/${type}?api_key=${api_key}`,
   });
 
-export const getMoviesThunk = () => async (dispatch) => {
+export const getMoviesThunk = (info) => async (dispatch) => {
   try {
-    const response = await getMoviesMethod();
+    const response = await getMoviesMethod(info);
     const movies = response.data.results.map(data => {
       return {
         ...data,
@@ -30,9 +30,9 @@ export const getMoviesThunk = () => async (dispatch) => {
   }
 }
 
-export const getSeriesThunk = () => async (dispatch) => {
+export const getSeriesThunk = (info) => async (dispatch) => {
   try {
-    const response = await getSeriesMethod();
+    const response = await getSeriesMethod(info);
     const series = response.data.results.map(data => {
       return {
         ...data,

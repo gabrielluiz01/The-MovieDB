@@ -11,7 +11,7 @@ import { getSeriesThunk } from '../dataflow/thunks/app-thunk';
 
 // Map State
 const mapStateToProps = state => ({
-  series: state.series.series,
+  series: state.content.series,
 });
 
 // Map Dispatch
@@ -164,7 +164,7 @@ class Series extends Component{
   }
 
   componentDidMount() {
-    this.props.getSeriesThunk();
+    this.props.getSeriesThunk('popular');
   }
 
   loadSeries = () => {

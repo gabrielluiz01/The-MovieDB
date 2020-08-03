@@ -9,12 +9,10 @@ import {
 import thunkMiddleware from 'redux-thunk';
 
 // Reducers
-import Movies from './dataflow/modules/app-module';
-import Series from './dataflow/modules/app-module';
+import Content from './dataflow/modules/app-module';
 
 const reducers = combineReducers({
-  movies: Movies,
-  series: Series,
+  content: Content,
 });
 
 const rootReducer = (state, action) => {
@@ -34,6 +32,11 @@ const configureStore = (initialState) => {
     initialState,
     window.devToolsExtension ? window.devToolsExtension() : f => f,
   );
+  if (module.hot) {
+    module.hot.accept(reducers, () => {
+      store.replaceReducer(reducers);
+    })
+  }
   return store;
 }
 

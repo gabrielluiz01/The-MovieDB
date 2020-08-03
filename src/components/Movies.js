@@ -11,7 +11,7 @@ import { getMoviesThunk } from '../dataflow/thunks/app-thunk';
 
 // Map State
 const mapStateToProps = state => ({
-  movies: state.movies.movies,
+  movies: state.content.movies,
 });
 
 // Map Dispatch
@@ -21,12 +21,12 @@ const mapDispatchToProps = dispatch => ({
 
 // Styled 
 const Content = styled.div`
-  width: 100%;
+  width: 80%;
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: #141414;
-  padding-left: 2rem;
+  /* padding-left: 2rem; */
   padding-bottom: 1rem;
 `;
 
@@ -164,7 +164,7 @@ class Layout extends Component{
   }
 
   componentDidMount() {
-    this.props.getMoviesThunk();
+    this.props.getMoviesThunk('popular');
   }
 
   loadMovies = () => {
@@ -194,6 +194,7 @@ class Layout extends Component{
   }
 
   render() {
+    console.log('filmes', this.props.movies)
     return (
       <Content>
         <ContainerTitle>Filmes</ContainerTitle>

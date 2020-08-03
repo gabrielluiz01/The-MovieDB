@@ -13,10 +13,12 @@ export default function (state = initialState, action) {
   switch (action.type) {
     case GET_MOVIES:
       return {
+        ...state,
         movies: action.info
       }
     case GET_SERIES:
       return {
+        ...state,
         series: action.info
       }
     default:

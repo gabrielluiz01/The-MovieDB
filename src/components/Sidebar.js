@@ -1,13 +1,21 @@
 // Libs
 import React, {Component} from 'react';
 import styled from 'styled-components';
-import {NavLink} from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { connect } from 'react-redux';
 
 // Images
 import Logo from '../assets/logo.png';
 
+import { getMoviesThunk, getSeriesThunk } from '../dataflow/thunks/app-thunk';
+
+const mapDispatchToProps = dispatch => ({
+  getMoviesThunk: info => dispatch(getMoviesThunk(info)),
+  getSeriesThunk: info => dispatch(getSeriesThunk(info)),
+})
+
 const Container = styled.div`
-  width: 25%;
+  width: 20%;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -61,7 +69,7 @@ class Sidebar extends Component{
     isOpenMovies: false,
     isOpenSeries: false,
     moviesOptions: ['top rated', 'now playing', 'upcoming', 'popular'],
-    seriesOptions: ['airing today', 'on the air', 'top_rated', 'popular'],
+    seriesOptions: ['airing today', 'on the air', 'top rated', 'popular'],
   }
 
   openMovies = (ev) => {
@@ -84,6 +92,36 @@ class Sidebar extends Component{
     })
   }
 
+  handleClickMovies = (data) => {
+    switch (data) {
+      case 'top rated':
+        return this.props.getMoviesThunk('top_rated') && this.props.changeScreen('movies')
+      case 'now playing':
+        return this.props.getMoviesThunk('now_playing') && this.props.changeScreen('movies')
+      case 'upcoming':
+        return this.props.getMoviesThunk('upcoming') && this.props.changeScreen('movies')
+      case 'popular':
+        return this.props.getMoviesThunk('popular') && this.props.changeScreen('movies')
+      default: 
+        return null
+    }
+  }
+
+  handleClickSeries = (data) => {
+    switch (data) {
+      case 'airing today':
+        return this.props.getSeriesThunk('airing_today') && this.props.changeScreen('series')
+      case 'on the air':
+        return this.props.getSeriesThunk('on_the_air') && this.props.changeScreen('series')
+      case 'top rated':
+        return this.props.getSeriesThunk('top_rated') && this.props.changeScreen('series')
+      case 'popular':
+        return this.props.getSeriesThunk('popular') && this.props.changeScreen('series')
+      default: 
+        return null
+    }
+  }
+
   render(){
     return(
       <Container onClick={() => this.setState({isOpenMovies: false, isOpenSeries: false,})}>
@@ -93,7 +131,7 @@ class Sidebar extends Component{
             <Options onClick={this.openMovies}>Filmes</Options>
             {this.state.isOpenMovies && (
               this.state.moviesOptions.map(data =>(
-                <SubOptions onClick={() => this.props.changeScreen('movies')}>{data}</SubOptions>
+                <SubOptions onClick={() => this.handleClickMovies(data)}>{data}</SubOptions>
               ))
             )}
           </BoxOption>
@@ -101,7 +139,7 @@ class Sidebar extends Component{
             <Options onClick={this.openSeries}>Séries</Options>
             {this.state.isOpenSeries && (
               this.state.seriesOptions.map(data =>(
-                <SubOptions onClick={() => this.props.changeScreen('series')}>
+                <SubOptions onClick={() => this.handleClickSeries(data)}>
                   {data}
                 </SubOptions>
               ))
@@ -113,4 +151,4 @@ class Sidebar extends Component{
   }
 }
 
-export default Sidebar;
+export default connect(null, mapDispatchToProps) (Sidebar);
