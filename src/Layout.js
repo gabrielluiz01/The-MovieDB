@@ -18,7 +18,7 @@ const Container = styled.div`
 class Layout extends Component{
 
   state = {
-    currentScreen: 'movies',
+    currentScreen: 'series',
   }
 
   handleScreen = () => {
@@ -38,7 +38,6 @@ class Layout extends Component{
 
 
   render() {
-    // console.log('filmes')
     return(
       <Container>
         <Sidebar changeScreen={this.changeScreen}/>

@@ -95,7 +95,7 @@ export const searchSeriesThunk = (value) => async (dispatch) => {
       return{
         ...data,
         poster_path: `https://image.tmdb.org/t/p/w500${data.poster_path}`,
-        backdrop_poster: `https://image.tmdb.org/t/p/w500${data.backdrop_poster}`,
+        backdrop_path: `https://image.tmdb.org/t/p/w500${data.backdrop_poster}`,
       }
     })
     dispatch(searchSeries(filteredSeries))
@@ -120,7 +120,6 @@ export const detailsMoviesThunk = (id) => async (dispatch) => {
     const response = await detailsMoviesMethod(id)
     const details = response.data
     dispatch(openDetailsMovies(details))
-    console.log('detalhe', details)
   } catch(err){
     console.log('erro', err)
   }

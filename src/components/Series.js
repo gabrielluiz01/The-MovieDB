@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 
 // Images
 import StarIcon from '../assets/star.png';
+import Arrow from '../assets/arrow.png';
 
 // Redux
 import { getSeriesThunk, searchSeriesThunk, detailsSeriesThunk } from '../dataflow/thunks/app-thunk';
@@ -157,6 +158,56 @@ const ButtonFilter = styled.button`
   }
 `;
 
+const Overlay = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #141414;
+  position: fixed;
+  top: 0%;
+  left: 0;
+`;
+
+const Modal = styled.div`
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const BoxInfoMovie = styled.div`
+  width: auto;
+  display: flex;
+`;
+
+const BoxInfo = styled.div`
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+`;
+
+const BoxArrow = styled.div``;
+
+const ImageArrow = styled.img`
+  width: 50px;
+  border-radius: 50%;
+  margin: 1rem;
+  cursor: pointer;
+`;
+
+const BoxTrailer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: #FFF;
+`;
+
+const Trailer = styled.div``;
+
+const Images = styled.div``;
+
 class Series extends Component{
 
   state = {
@@ -165,7 +216,7 @@ class Series extends Component{
     searching: false,
     filtered: undefined,
     hovered: false,
-    details: false,
+    isOpenDetails: false,
   }
 
   componentDidMount() {
@@ -189,31 +240,58 @@ class Series extends Component{
   handleClick = (item) => {
     this.props.detailsSeriesThunk(item.id)
     this.setState({
-      details: true,
+      isOpenDetails: true,
     })
   }
 
-  renderDetails = () => {
-    this.props.detailsSeries.map(data => {
-      console.log(data.original_name)
-      return(
-      <div>
-        <BoxAverage>
-          <Star src={StarIcon}/>
-          <AverageVote>{data.original_name}</AverageVote>
-        </BoxAverage>
-      </div>
-    )})
+  renderImageDetails = () => {
+    const images = this.props.detailsSeries.map(item => {
+      return {
+        ...item,
+        backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
+        poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+      }
+      return <img src={item.backdrop_path}/>
+    })
   }
+
+  renderModalDetails = () => (
+    <>
+      {this.props.detailsSeries.map(item => {
+        return {
+          ...item,
+          backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
+          poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+        }
+        return (
+          <Overlay>
+            <BoxArrow>
+              <ImageArrow src={Arrow} onClick={() => this.setState({ isOpenDetails: false })} />
+            </BoxArrow>
+            <Modal>
+              <BoxInfoMovie>
+                <ImageMovie src={item.backdrop_path} style={{ margin: '0 1rem' }} />
+                <BoxInfo>
+                  <TitleMovie>{item.original_name}</TitleMovie>
+                  <Synopsis>{item.release_date}</Synopsis>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxInfo>
+              </BoxInfoMovie>
+            </Modal>
+          </Overlay>
+        )
+      })}}
+  </>
+  )
 
   render() {
     console.log(this.props.detailsSeries)
     return (
-      <Content>
-        {this.state.details ? (
-          this.renderDetails()
+      <Content> 
+        {this.state.isOpenDetails ? (
+          this.renderModalDetails()
         ) : (
-        <>
+          <>
           <ContainerTitle>Series</ContainerTitle>
           <Form>
             <InputFilter 
@@ -226,7 +304,7 @@ class Series extends Component{
           <Container load={this.state.load}>
             {this.state.search.length > 0 ? (
               this.props.filteredSeries.map(item => (
-                <BoxMovies key={item.id}>
+                <BoxMovies key={item.id} onClick={() => this.handleClick(item)}>
     
                   <ImageMovie src={item.poster_path} />
                   <BoxAverage>
@@ -252,8 +330,8 @@ class Series extends Component{
               ))
             )}
           </Container>
-        </>
-        )}
+          </>
+          )}
       </Content>
     );
   }

@@ -9,6 +9,7 @@ import {api_key} from '../api';
 
 // Images
 import StarIcon from '../assets/star.png';
+import Arrow from '../assets/arrow.png';
 
 // Redux
 import { getMoviesThunk, searchMoviesThunk, detailsMoviesThunk } from '../dataflow/thunks/app-thunk'; 
@@ -161,12 +162,63 @@ const ButtonFilter = styled.button`
   }
 `;
 
+const Overlay = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #141414;
+  position: fixed;
+  top: 0%;
+  left: 0;
+`;
+
+const Modal = styled.div`
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const BoxInfoMovie = styled.div`
+  width: auto;
+  display: flex;
+`;
+
+const BoxInfo = styled.div`
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+`;
+
+const BoxArrow = styled.div``;
+
+const ImageArrow = styled.img`
+  width: 50px;
+  border-radius: 50%;
+  margin: 1rem;
+  cursor: pointer;
+`;
+
+const BoxTrailer = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1rem;
+  background: #FFF;
+`;
+
+const Trailer = styled.div``;
+
+const Images = styled.div``;
+
 class Layout extends Component{
 
   state = {
     load: false,
     search: '',
     searching: false,
+    isOpenDetails: false,
   }
 
   componentDidMount() {
@@ -175,6 +227,9 @@ class Layout extends Component{
 
   handleClick = (item) => {
     this.props.detailsMoviesThunk(item.id);
+    this.setState({
+      isOpenDetails: true,
+    })
     console.log('teste', this.props.detailsMovies)
   }
 
@@ -187,48 +242,81 @@ class Layout extends Component{
     this.props.searchMoviesThunk(search)
   }
 
+
+  renderModalDetails = () => {
+    return (
+      <>
+        {this.props.detailsMovies.map(item => (
+          <Overlay>
+            <BoxArrow>
+              <ImageArrow src={Arrow} onClick={() => this.setState({ isOpenDetails: false })}/>
+            </BoxArrow>
+            <Modal>
+              <BoxInfoMovie>
+                <ImageMovie src={item.backdrop_path} style={{margin: '0 1rem'}}/>
+                <BoxInfo>
+                  <TitleMovie>{item.title}</TitleMovie>
+                  <Synopsis>{item.release_date}</Synopsis>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxInfo>
+              </BoxInfoMovie>
+            </Modal>
+          </Overlay>
+        ))}
+      </>
+    )
+  }
+
   render() {
     console.log('filmes', this.props.detailsMovies)
     return (
       <Content>
-        <ContainerTitle>Filmes</ContainerTitle>
-        <Form>
-          <InputFilter 
-            type="text" 
-            placeholder="buscar filmes" 
-            onChange={this.handleChangeFilter}
-          />
-          <ButtonFilter type="submit">Pesquisar</ButtonFilter>
-        </Form>
-        <Container load={this.state.load}>
-          {this.state.search.length > 0 ? (
-            this.props.filteredMovies.map(item => (
-              <BoxMovies key={item.id}>
-  
-                <ImageMovie src={item.poster_path} />
-                <BoxAverage>
-                  <Star src={StarIcon}/>
-                  <AverageVote>{item.vote_average}</AverageVote>
-                </BoxAverage>
-                <TitleMovie>{item.title}</TitleMovie>
-                <Synopsis>{item.overview}</Synopsis>
-              </BoxMovies>
-            ))
-          ) : (
-            this.props.movies.map(item => (
-              <BoxMovies key={item.id} onClick={() => this.handleClick(item)}>
-  
-                <ImageMovie src={item.poster_path} />
-                <BoxAverage>
-                  <Star src={StarIcon}/>
-                  <AverageVote>{item.vote_average}</AverageVote>
-                </BoxAverage>
-                <TitleMovie>{item.title}</TitleMovie>
-                <Synopsis>{item.overview}</Synopsis>
-              </BoxMovies>
-            ))
-          )}
-        </Container>
+        {this.state.isOpenDetails ? (
+          <>
+            {this.renderModalDetails()}
+          </>
+        ) : (
+          <>
+          <ContainerTitle>Filmes</ContainerTitle>
+          <Form>
+            <InputFilter 
+              type="text" 
+              placeholder="buscar filmes" 
+              onChange={this.handleChangeFilter}
+            />
+            <ButtonFilter type="submit">Pesquisar</ButtonFilter>
+          </Form>
+          <Container load={this.state.load}>
+            {this.state.search.length > 0 ? (
+              this.props.filteredMovies.map(item => (
+                <BoxMovies key={item.id} onClick={() => this.handleClick(item)}>
+    
+                  <ImageMovie src={item.poster_path} />
+                  <BoxAverage>
+                    <Star src={StarIcon}/>
+                    <AverageVote>{item.vote_average}</AverageVote>
+                  </BoxAverage>
+                  <TitleMovie>{item.title}</TitleMovie>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxMovies>
+              ))
+            ) : (
+              this.props.movies.map(item => (
+                <BoxMovies key={item.id} onClick={() => this.handleClick(item)}>
+    
+                  <ImageMovie src={item.poster_path} />
+                  <BoxAverage>
+                    <Star src={StarIcon}/>
+                    <AverageVote>{item.vote_average}</AverageVote>
+                  </BoxAverage>
+                  <TitleMovie>{item.title}</TitleMovie>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxMovies>
+              ))
+            )}
+          </Container>
+        </>
+      )}
       </Content>
     );
   }
