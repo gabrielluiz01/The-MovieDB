@@ -1,5 +1,5 @@
 import api from '../../api';
-import { getMovies, getSeries, searchMovies, searchSeries, openDetailsSeries, openDetailsMovies } from '../modules/app-module';
+import { getMovies, getSeries, searchMovies, searchSeries, openDetailsSeries, openDetailsMovies, getVideosMovies, getImagesMovies, getSeasons } from '../modules/app-module';
 import { api_key } from '../../api';
 
 const getMoviesMethod = (type) =>
@@ -37,6 +37,24 @@ const detailsSeriesMethod = (id) =>
   api({
     method: 'get',
     url: `/movie/${id}?api_key=${api_key}`,
+  })
+
+  const getVideoMoviesMethod = (id) =>
+  api({
+    method: 'get',
+    url: `/movie/${id}/videos?api_key=${api_key}&language=en-US`,
+  })
+
+  const getImagesMoviesMethod = (id) => 
+  api({
+    method: 'get',
+    url:`/movie/${id}/images?api_key=${api_key}`,
+  })  
+
+  const getSeasonMethod = (id) =>
+    api({
+      method: 'get',
+      url: `/tv/${id}$?api_key=${api_key}`,
   })
 
 
@@ -108,7 +126,6 @@ export const detailsSeriesThunk = (id) => async (dispatch) => {
   try{
     const response = await detailsSeriesMethod(id)
     const details = response.data
-    console.log('resposta', details)
     dispatch(openDetailsSeries(details))
   } catch(err){
     console.log('erro', err)
@@ -124,3 +141,35 @@ export const detailsMoviesThunk = (id) => async (dispatch) => {
     console.log('erro', err)
   }
 } 
+
+export const getVideoMoviesThunk = (id) => async (dispatch) => {
+  try {
+    const response = await getVideoMoviesMethod(id)
+    const videos = response.data.results[0]
+    console.log('reponse videos', videos)
+    dispatch(getVideosMovies(videos))
+  } catch (err) {
+    console.log('err', err);
+  }
+}
+
+export const getImagesMoviesThunk = (id) => async (dispatch) => {
+  try {
+    const response = await getImagesMoviesMethod(id)
+    const images = response.data.backdrops
+    dispatch(getImagesMovies(images))
+  } catch (err) {
+    console.log('erro', err)
+  }
+}
+
+export const getSeasonThunk = (id) => async (dispatch) => {
+  try {
+    const response = await getSeasonMethod(id)
+    const seasons = response.data.seasons
+    console.log('temporadas', seasons)
+    dispatch(getSeasons(seasons))
+  } catch (err) {
+    console.log('error', err)
+  }
+}

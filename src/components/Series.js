@@ -8,13 +8,14 @@ import StarIcon from '../assets/star.png';
 import Arrow from '../assets/arrow.png';
 
 // Redux
-import { getSeriesThunk, searchSeriesThunk, detailsSeriesThunk } from '../dataflow/thunks/app-thunk';
+import { getSeriesThunk, searchSeriesThunk, detailsSeriesThunk, getSeasonThunk } from '../dataflow/thunks/app-thunk';
 
 // Map State
 const mapStateToProps = state => ({
   series: state.content.series,
   filteredSeries: state.content.filteredSeries,
   detailsSeries: state.content.detailsSeries,
+  seasons: state.content.seasons,
 });
 
 // Map Dispatch
@@ -22,6 +23,7 @@ const mapDispatchToProps = dispatch => ({
   getSeriesThunk: info => dispatch(getSeriesThunk(info)),
   searchSeriesThunk: info => dispatch(searchSeriesThunk(info)),
   detailsSeriesThunk: info => dispatch(detailsSeriesThunk(info)),
+  getSeasonThunk: info => dispatch(getSeasonThunk(info)),
 })
 
 // Styled 
@@ -73,6 +75,7 @@ const BoxMovies = styled.div`
   box-shadow: 0px 0px 14px #FBAA30;
   margin-top: 2rem;
   position: relative;
+  z-index: 1;
 `;
 
 const ImageMovie = styled.img`
@@ -94,6 +97,7 @@ const TitleMovie = styled.h1`
   margin-left: .5rem;
   font-size: 1.3rem;
   color: #FFF;
+  z-index: 1;
 `;
 
 const Synopsis = styled.p`
@@ -101,8 +105,10 @@ const Synopsis = styled.p`
   height: 4.2rem;
   align-self: center;
   text-overflow: ellipsis;
-  overflow: hidden;
+  overflow: ${props => props.details ? 'none' : 'hidden'};
   color: #FFF;
+  font-size: ${props => props.details && '1rem'};
+  z-index: 1;
 `;
 
 const BoxAverage = styled.span`
@@ -163,7 +169,7 @@ const Overlay = styled.div`
   display: flex;
   flex-direction: column;
   background: #141414;
-  position: fixed;
+  position: absolute;
   top: 0%;
   left: 0;
 `;
@@ -196,6 +202,22 @@ const ImageArrow = styled.img`
   cursor: pointer;
 `;
 
+const BoxPoster = styled.div`
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background: #141414;
+
+  img{
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+  }
+`;
+
 const BoxTrailer = styled.div`
   width: 100%;
   display: flex;
@@ -204,9 +226,19 @@ const BoxTrailer = styled.div`
   background: #FFF;
 `;
 
-const Trailer = styled.div``;
+const BoxSeasons = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #171717;  
+`;
 
-const Images = styled.div``;
+const Box = styled.div`
+  width: 300px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0px 0px 14px #FBAA30;
+`;
 
 class Series extends Component{
 
@@ -239,45 +271,65 @@ class Series extends Component{
 
   handleClick = (item) => {
     this.props.detailsSeriesThunk(item.id)
+    this.props.getSeasonThunk(item.id)
     this.setState({
       isOpenDetails: true,
     })
   }
 
-  renderImageDetails = () => {
-    const images = this.props.detailsSeries.map(item => {
-      return {
-        ...item,
-        backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
+  renderSeasons = () => {
+    this.props.seasons.map(item => {
+      const images = {
         poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
       }
-      return <img src={item.backdrop_path}/>
+      return (
+        <Box>
+          <h1 style={{color: '#FFF'}}>SEASONS</h1>
+          <img src={images.poster_path}/>
+        </Box>
+      )
     })
   }
 
   renderModalDetails = () => (
     <>
       {this.props.detailsSeries.map(item => {
-        return {
+        const images = {
           ...item,
           backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
           poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
         }
         return (
           <Overlay>
+            <BoxPoster>
+              <img src={images.backdrop_path}/>    
+            </BoxPoster>  
             <BoxArrow>
               <ImageArrow src={Arrow} onClick={() => this.setState({ isOpenDetails: false })} />
             </BoxArrow>
             <Modal>
               <BoxInfoMovie>
-                <ImageMovie src={item.backdrop_path} style={{ margin: '0 1rem' }} />
+                <ImageMovie src={images.poster_path} style={{ margin: '0 1rem' }} />
                 <BoxInfo>
                   <TitleMovie>{item.original_name}</TitleMovie>
                   <Synopsis>{item.release_date}</Synopsis>
-                  <Synopsis>{item.overview}</Synopsis>
+                  <Synopsis details>{item.overview}</Synopsis>
                 </BoxInfo>
               </BoxInfoMovie>
             </Modal>
+            <BoxSeasons>
+              {this.props.seasons.map(item => {
+                const images = {
+                  poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+                }
+                return (
+                  <Box>
+                    <h1 style={{ color: '#FFF' }}>SEASONS</h1>
+                    <img style={{ width: '150px' }} src={images.poster_path} />
+                  </Box>
+                )
+              })}
+            </BoxSeasons>
           </Overlay>
         )
       })}}

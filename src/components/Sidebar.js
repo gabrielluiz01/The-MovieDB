@@ -15,7 +15,7 @@ const mapDispatchToProps = dispatch => ({
 })
 
 const Container = styled.div`
-  width: 20%;
+  width: 15rem;
   height: 100vh;
   display: flex;
   flex-direction: column;

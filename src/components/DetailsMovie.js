@@ -24,20 +24,23 @@ const Content = styled.div`
   background: url("https://image.tmdb.org/t/p/w500//bOGkgRGdhrBYJSLpXaxhXVstddV.jpg") 0% 0% / cover no-repeat fixed;
 `;
 
-
-
 class DetailsMovie extends Component{
+
+  renderTitle = () => {
+    this.props.detailsMovies.map(item => (
+        <p>{item.name}</p>
+    ))
+  }
+
+
   render() {
-    console.log('props', this.props);
     return (
       <>
-        {this.props.detailsMovies.map(item => (
-          <Container> 
-            <Content>
-
-            </Content>
-          </Container>
-        ))}
+        <Container> 
+          <Content>
+            {this.renderTitle()}
+          </Content>
+        </Container>
       </>
     );
   }

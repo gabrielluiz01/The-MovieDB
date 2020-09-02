@@ -2,6 +2,7 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
+import YouTube from 'react-youtube';
 
 // Api
 import api from '../api';
@@ -12,13 +13,21 @@ import StarIcon from '../assets/star.png';
 import Arrow from '../assets/arrow.png';
 
 // Redux
-import { getMoviesThunk, searchMoviesThunk, detailsMoviesThunk } from '../dataflow/thunks/app-thunk'; 
+import {
+  getMoviesThunk,
+  searchMoviesThunk,
+  detailsMoviesThunk,
+  getVideoMoviesThunk,
+  getImagesMoviesThunk,
+} from '../dataflow/thunks/app-thunk'; 
 
 // Map State
 const mapStateToProps = state => ({
   movies: state.content.movies,
   filteredMovies: state.content.filteredMovies,
   detailsMovies: state.content.detailsMovies,
+  moviesVideos: state.content.moviesVideos,
+  imagesMovies: state.content.imagesMovies,
 });
 
 // Map Dispatch
@@ -26,16 +35,17 @@ const mapDispatchToProps = dispatch => ({
   getMoviesThunk: info => dispatch(getMoviesThunk(info)),
   searchMoviesThunk: info => dispatch(searchMoviesThunk(info)),
   detailsMoviesThunk: info => dispatch(detailsMoviesThunk(info)),
+  getVideoMoviesThunk: info => dispatch(getVideoMoviesThunk(info)),
+  getImagesMoviesThunk: info => dispatch(getImagesMoviesThunk(info)),
 });
 
 // Styled 
 const Content = styled.div`
-  width: 80%;
+  width: calc(100% - 15rem);
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: #141414;
-  /* padding-left: 2rem; */
   padding-bottom: 1rem;
 `;
 
@@ -47,10 +57,9 @@ const Container = styled.div`
   grid-template-columns: repeat(4, 1fr);
   grid-gap: 40px;
   background: #141414;
-  padding: 1rem;
 
   ::-webkit-scrollbar{
-    width: 8px;
+    width: 4px;
     background: transparent;
   }
 
@@ -80,7 +89,8 @@ const BoxMovies = styled.div`
 `;
 
 const ImageMovie = styled.img`
-  width: 200px;
+  width: ${props => props.details ? '250px' : '200px'};
+  height: ${props => props.details && '300px'};
   cursor: pointer;
   position: relative;
 
@@ -167,36 +177,45 @@ const Overlay = styled.div`
   display: flex;
   flex-direction: column;
   background: #141414;
-  position: fixed;
+  background: transparent;
+  position: absolute;
   top: 0%;
   left: 0;
+  z-index: 1;
 `;
 
 const Modal = styled.div`
   width: 100%;
-  height: 100vh;
+  height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1;
+  margin-bottom: -2rem;
 `;
 
 const BoxInfoMovie = styled.div`
   width: auto;
   display: flex;
+  z-index: 1;
 `;
 
 const BoxInfo = styled.div`
   width: 25vw;
   display: flex;
   flex-direction: column;
+  z-index: 1;
 `;
 
-const BoxArrow = styled.div``;
+const BoxArrow = styled.div`
+  z-index: 1;
+`;
 
 const ImageArrow = styled.img`
   width: 50px;
   border-radius: 50%;
   margin: 1rem;
+  z-index: 1;
   cursor: pointer;
 `;
 
@@ -206,11 +225,55 @@ const BoxTrailer = styled.div`
   justify-content: space-between;
   padding: 0 1rem;
   background: #FFF;
+  z-index: 1;
 `;
 
-const Trailer = styled.div``;
+const BoxVideosImages = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  padding-top: 2rem;
+  background: #171717;
+`;
 
-const Images = styled.div``;
+const BoxPoster = styled.div`
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background: #141414;
+
+  img{
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+  }
+`;
+
+const BoxGallery = styled.div`
+  width: 50%;
+  height: 30rem;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  z-index: 1;
+  overflow: hidden;
+`;
+
+const ImageGallery = styled.img`
+  width: 220px;
+  height: 150px;
+
+  :hover{
+    width: 250px;
+    height: 200px;
+    transition: 0.5s ease-in-out;
+  }
+`;
 
 class Layout extends Component{
 
@@ -227,10 +290,11 @@ class Layout extends Component{
 
   handleClick = (item) => {
     this.props.detailsMoviesThunk(item.id);
+    this.props.getVideoMoviesThunk(item.id);
+    this.props.getImagesMoviesThunk(item.id);
     this.setState({
       isOpenDetails: true,
     })
-    console.log('teste', this.props.detailsMovies)
   }
 
 
@@ -242,33 +306,78 @@ class Layout extends Component{
     this.props.searchMoviesThunk(search)
   }
 
+  renderVideos = () => {
+    const opts = {
+      height: '300',
+      width: '500',
+      playerVars: {
+        autoplay: 0,
+      },
+    }
+    const video = this.props.moviesVideos
+    return <YouTube videoId={video.key} opts={opts}/>
+  }
+
+  // renderGallery = () => {
+  //   this.props.imagesMovies.map(item => {
+  //     console.log('eaokaoo')
+  //     const images = {
+  //       file_path: `https://image.tmdb.org/t/p/w500${item.file_path}`,
+  //     }
+  //     return (
+  //       <img src={images.file_path}/>
+  //     )
+  //   })
+  // }
+
 
   renderModalDetails = () => {
     return (
       <>
-        {this.props.detailsMovies.map(item => (
+        {this.props.detailsMovies.map(item => {
+          console.log('detalhes', item)
+          const images = {
+            poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+            backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`
+          }
+          return(
           <Overlay>
+            <BoxPoster>
+                <img src={images.backdrop_path}/>    
+            </BoxPoster>  
             <BoxArrow>
               <ImageArrow src={Arrow} onClick={() => this.setState({ isOpenDetails: false })}/>
             </BoxArrow>
-            <Modal>
+              <Modal>
               <BoxInfoMovie>
-                <ImageMovie src={item.backdrop_path} style={{margin: '0 1rem'}}/>
+                <ImageMovie details src={images.poster_path} style={{margin: '0 1rem'}}/>
                 <BoxInfo>
                   <TitleMovie>{item.title}</TitleMovie>
                   <Synopsis>{item.release_date}</Synopsis>
                   <Synopsis>{item.overview}</Synopsis>
                 </BoxInfo>
-              </BoxInfoMovie>
+                </BoxInfoMovie>
             </Modal>
+            <BoxVideosImages>
+                {this.renderVideos()}
+                <BoxGallery>
+                  {this.props.imagesMovies.map(item => {
+                    const gallery = {
+                      file_path: `https://image.tmdb.org/t/p/w500${item.file_path}`,
+                    }
+                    return (
+                      <ImageGallery src={gallery.file_path}/>
+                    )
+                  })}
+                </BoxGallery>
+            </BoxVideosImages>
           </Overlay>
-        ))}
+        )})}
       </>
     )
   }
 
   render() {
-    console.log('filmes', this.props.detailsMovies)
     return (
       <Content>
         {this.state.isOpenDetails ? (
