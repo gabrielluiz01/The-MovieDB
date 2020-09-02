@@ -18,7 +18,7 @@ const Container = styled.div`
 class Layout extends Component{
 
   state = {
-    currentScreen: 'series',
+    currentScreen: 'movies',
   }
 
   handleScreen = () => {

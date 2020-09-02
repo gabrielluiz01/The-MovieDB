@@ -30,7 +30,7 @@ const mapDispatchToProps = dispatch => ({
 
 // Styled 
 const Content = styled.div`
-  width: 80%;
+  width: calc(100% - 13rem);
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -194,7 +194,7 @@ const BoxInfo = styled.div`
 const BoxArrow = styled.div``;
 
 const ImageArrow = styled.img`
-  width: 50px;
+  width: 40px;
   border-radius: 50%;
   margin: 1rem;
   cursor: pointer;
@@ -224,6 +224,7 @@ class Layout extends Component{
   componentDidMount() {
     this.props.getMoviesThunk('popular');
   }
+
 
   handleClick = (item) => {
     this.props.detailsMoviesThunk(item.id);

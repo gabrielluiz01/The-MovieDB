@@ -258,11 +258,6 @@ class Series extends Component{
   renderModalDetails = () => (
     <>
       {this.props.detailsSeries.map(item => {
-        return {
-          ...item,
-          backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
-          poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-        }
         return (
           <Overlay>
             <BoxArrow>

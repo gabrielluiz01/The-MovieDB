@@ -15,7 +15,7 @@ const mapDispatchToProps = dispatch => ({
 })
 
 const Container = styled.div`
-  width: 20%;
+  width: 13rem;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -25,7 +25,7 @@ const Container = styled.div`
 `;
 
 const ImageLogo = styled.img`
-  width: 200px;
+  width: 150px;
   align-self: center;
 `;
 
