@@ -2,6 +2,7 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
+import { Redirect } from 'react-router-dom' 
 
 // Api
 import api from '../api';
@@ -9,16 +10,27 @@ import {api_key} from '../api';
 
 // Images
 import StarIcon from '../assets/star.png';
-import Arrow from '../assets/arrow.png';
+import Arrow from '../assets/arrow.svg';
 
 // Redux
-import { getMoviesThunk, searchMoviesThunk, detailsMoviesThunk } from '../dataflow/thunks/app-thunk'; 
+import {
+  getMoviesThunk,
+  searchMoviesThunk,
+  detailsMoviesThunk,
+  getVideoMoviesThunk,
+  getImagesMoviesThunk,
+  getCastMoviesThunk
+} from '../dataflow/thunks/app-thunk'; 
+import {clear} from '../dataflow/modules/app-module';
 
 // Map State
 const mapStateToProps = state => ({
   movies: state.content.movies,
   filteredMovies: state.content.filteredMovies,
   detailsMovies: state.content.detailsMovies,
+  moviesVideos: state.content.moviesVideos,
+  imagesMovies: state.content.imagesMovies,
+  castMovies: state.content.castMovies,
 });
 
 // Map Dispatch
@@ -26,6 +38,10 @@ const mapDispatchToProps = dispatch => ({
   getMoviesThunk: info => dispatch(getMoviesThunk(info)),
   searchMoviesThunk: info => dispatch(searchMoviesThunk(info)),
   detailsMoviesThunk: info => dispatch(detailsMoviesThunk(info)),
+  getVideoMoviesThunk: info => dispatch(getVideoMoviesThunk(info)),
+  getImagesMoviesThunk: info => dispatch(getImagesMoviesThunk(info)),
+  getCastMoviesThunk: info => dispatch(getCastMoviesThunk(info)),
+  clear: info => dispatch(clear(info))
 });
 
 // Styled 
@@ -35,7 +51,6 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   background: #141414;
-  /* padding-left: 2rem; */
   padding-bottom: 1rem;
 `;
 
@@ -69,18 +84,19 @@ const ContainerTitle = styled.h1`
 
 const BoxMovies = styled.div`
   width: 100%;
-  height: auto;
-  padding: 1rem;
+  padding: .5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 0px 0px 14px #FBAA30;
-  margin-top: 2rem;
+  margin-bottom: 2rem;
   position: relative;
+  z-index: 1;
 `;
 
 const ImageMovie = styled.img`
-  width: 200px;
+  width: ${props => props.details ? '250px' : '200px'};
+  height: ${props => props.details && '300px'};
   cursor: pointer;
   position: relative;
 
@@ -144,6 +160,7 @@ const InputFilter = styled.input`
   margin-right: 1rem;
   padding: 0 1rem;
   border-radius: 6px;
+  color: #000;
 `;
 
 const ButtonFilter = styled.button`
@@ -167,34 +184,44 @@ const Overlay = styled.div`
   display: flex;
   flex-direction: column;
   background: #141414;
-  position: fixed;
+  background: transparent;
+  position: absolute;
   top: 0%;
   left: 0;
+  z-index: 1;
 `;
 
 const Modal = styled.div`
   width: 100%;
-  height: 100vh;
+  height: 90vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1;
+  margin-bottom: -2rem;
 `;
 
 const BoxInfoMovie = styled.div`
   width: auto;
   display: flex;
+  z-index: 1;
 `;
 
 const BoxInfo = styled.div`
   width: 25vw;
   display: flex;
   flex-direction: column;
+  z-index: 1;
 `;
 
-const BoxArrow = styled.div``;
+const BoxArrow = styled.div`
+  z-index: 1;
+  display: flex;
+  align-items: center;
+`;
 
 const ImageArrow = styled.img`
-  width: 40px;
+  width: 70px;
   border-radius: 50%;
   margin: 1rem;
   cursor: pointer;
@@ -206,11 +233,77 @@ const BoxTrailer = styled.div`
   justify-content: space-between;
   padding: 0 1rem;
   background: #FFF;
+  z-index: 1;
 `;
 
-const Trailer = styled.div``;
+const BoxVideosImages = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  margin-top: -1rem;
+  padding-top: 2rem;
+  background: #171717;
+`;
 
-const Images = styled.div``;
+const BoxPoster = styled.div`
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background: #141414;
+
+  img{
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+  }
+`;
+
+const BoxGallery = styled.div`
+  width: 60%;
+  height: 27rem;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 1;
+  overflow: hidden;
+`;
+
+const ImageGallery = styled.img`
+  width: 220px;
+  height: 150px;
+
+  :hover{
+    width: 230px;
+    transition: 0.5s ease-in-out;
+  }
+`;
+
+const BoxCast = styled.div`
+  width: 100%;
+  display: flex;
+  overflow: hidden;
+  /* justify-content: center; */
+  align-items: center;
+  padding: 1rem;
+  background: #141414;
+`;
+
+const ImageCast = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+`;
+
+const NameCast = styled.p`
+  text-align: center;
+`;
 
 class Layout extends Component{
 
@@ -228,10 +321,13 @@ class Layout extends Component{
 
   handleClick = (item) => {
     this.props.detailsMoviesThunk(item.id);
+    this.props.getVideoMoviesThunk(item.id);
+    this.props.getImagesMoviesThunk(item.id);
+    this.props.getCastMoviesThunk(item.id)
+    return <Redirect to="/details-movies"/>
     this.setState({
       isOpenDetails: true,
     })
-    console.log('teste', this.props.detailsMovies)
   }
 
 
@@ -243,33 +339,108 @@ class Layout extends Component{
     this.props.searchMoviesThunk(search)
   }
 
+  // renderVideos = () => {
+  //   const opts = {
+  //     height: '300',
+  //     width: '500',
+  //     playerVars: {
+  //       autoplay: 0,
+  //     },
+  //     casts: this.props.castMovies.length,
+  //     showCasts: 5,
+  //   }
+  //   const video = this.props.moviesVideos
+  //   return <YouTube videoId={video.key} opts={opts}/>
+  // }
 
-  renderModalDetails = () => {
-    return (
-      <>
-        {this.props.detailsMovies.map(item => (
-          <Overlay>
-            <BoxArrow>
-              <ImageArrow src={Arrow} onClick={() => this.setState({ isOpenDetails: false })}/>
-            </BoxArrow>
-            <Modal>
-              <BoxInfoMovie>
-                <ImageMovie src={item.backdrop_path} style={{margin: '0 1rem'}}/>
-                <BoxInfo>
-                  <TitleMovie>{item.title}</TitleMovie>
-                  <Synopsis>{item.release_date}</Synopsis>
-                  <Synopsis>{item.overview}</Synopsis>
-                </BoxInfo>
-              </BoxInfoMovie>
-            </Modal>
-          </Overlay>
-        ))}
-      </>
-    )
+  isBack = () => {
+    this.setState({ isOpenDetails: false })
+    this.props.clear()
   }
 
+  // renderGallery = () => {
+  //   this.props.imagesMovies.map(item => {
+  //     console.log('eaokaoo')
+  //     const images = {
+  //       file_path: `https://image.tmdb.org/t/p/w500${item.file_path}`,
+  //     }
+  //     return (
+  //       <img src={images.file_path}/>
+  //     )
+  //   })
+  // }
+
+
+  // renderModalDetails = () => {
+  //   const {casts, showCasts} = this.state;
+  //   const data = Array.from({length: casts},(v, k) => k);
+  //   return (
+  //     <>
+  //       {this.props.detailsMovies.map(item => {
+  //         console.log('detalhes', item)
+  //         const images = {
+  //           poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+  //           backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`
+  //         }
+  //         return(
+  //         <Overlay>
+  //           <BoxPoster>
+  //               <img src={images.backdrop_path}/>    
+  //           </BoxPoster>  
+  //           <BoxArrow>
+  //             <ImageArrow src={Arrow} onClick={this.isBack} onMouseEnter={() => this.setState({isBack: true,})} onMouseLeave={() => this.setState({isBack: false,})}/>
+  //             {this.state.isBack && <p>Back</p>}
+  //           </BoxArrow>
+  //             <Modal>
+  //             <BoxInfoMovie>
+  //               <ImageMovie details src={images.poster_path} style={{margin: '0 1rem'}}/>
+  //               <BoxInfo>
+  //                 <TitleMovie>{item.title}</TitleMovie>
+  //                 <Synopsis>{item.release_date}</Synopsis>
+  //                 <Synopsis>{item.overview}</Synopsis>
+  //               </BoxInfo>
+  //               </BoxInfoMovie>
+  //           </Modal>
+  //           <BoxVideosImages>
+  //             <span style={{display: 'flex', flexDirection: 'column'}}>
+  //               <h1 style={{textAlign: 'center',marginBottom: '2.5rem'}}>Trailer</h1>
+  //               {this.renderVideos()}
+  //             </span>
+  //               <BoxGallery>
+  //                 {this.props.imagesMovies.map(item => {
+  //                   const gallery = {
+  //                     file_path: `https://image.tmdb.org/t/p/w500${item.file_path}`,
+  //                   }
+  //                   return (
+  //                     <ImageGallery src={gallery.file_path}/>
+  //                   )
+  //                 })}
+  //               </BoxGallery>
+  //           </BoxVideosImages>
+  //             <BoxCast>
+  //               {this.props.castMovies.map(item => {
+  //                 const images = {
+  //                   profile_path: `https://image.tmdb.org/t/p/w500${item.profile_path}`
+  //                 }
+  //                 return (
+  //                   data.slice(0, showCasts).map((casts, index) => {
+  //                     return(
+  //                     <div style={{display: 'flex', flexDirection: 'column'}}>
+  //                       <ImageCast src={images.profile_path}/>
+  //                       <NameCast>{item.name}</NameCast>
+  //                     </div>
+  //                     )
+  //                   })
+  //                 )
+  //               })}
+  //             </BoxCast>
+  //         </Overlay>
+  //       )})}
+  //     </>
+  //   )
+  // }
+
   render() {
-    console.log('filmes', this.props.detailsMovies)
     return (
       <Content>
         {this.state.isOpenDetails ? (
@@ -278,14 +449,14 @@ class Layout extends Component{
           </>
         ) : (
           <>
-          <ContainerTitle>Filmes</ContainerTitle>
+          <ContainerTitle>Movies</ContainerTitle>
           <Form>
             <InputFilter 
               type="text" 
-              placeholder="buscar filmes" 
+              placeholder="search movies" 
               onChange={this.handleChangeFilter}
             />
-            <ButtonFilter type="submit">Pesquisar</ButtonFilter>
+            <ButtonFilter type="submit">search</ButtonFilter>
           </Form>
           <Container load={this.state.load}>
             {this.state.search.length > 0 ? (

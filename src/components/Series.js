@@ -3,18 +3,24 @@ import React, {Component} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 
+// Components
+import Episodes from './Episodes';
+
 // Images
 import StarIcon from '../assets/star.png';
-import Arrow from '../assets/arrow.png';
+import Arrow from '../assets/arrow.svg';
 
 // Redux
-import { getSeriesThunk, searchSeriesThunk, detailsSeriesThunk } from '../dataflow/thunks/app-thunk';
+import { getSeriesThunk, searchSeriesThunk, detailsSeriesThunk, getSeasonThunk, getEpisodesThunk } from '../dataflow/thunks/app-thunk';
+import {saveId, clear} from '../dataflow/modules/app-module';
 
 // Map State
 const mapStateToProps = state => ({
   series: state.content.series,
   filteredSeries: state.content.filteredSeries,
   detailsSeries: state.content.detailsSeries,
+  seasons: state.content.seasons,
+  id: state.content.id,
 });
 
 // Map Dispatch
@@ -22,17 +28,19 @@ const mapDispatchToProps = dispatch => ({
   getSeriesThunk: info => dispatch(getSeriesThunk(info)),
   searchSeriesThunk: info => dispatch(searchSeriesThunk(info)),
   detailsSeriesThunk: info => dispatch(detailsSeriesThunk(info)),
+  getSeasonThunk: info => dispatch(getSeasonThunk(info)),
+  getEpisodesThunk: info => dispatch(getEpisodesThunk(info)),
+  saveId: info => dispatch(saveId(info)),
+  clear: info => dispatch(clear(info)),
 })
 
 // Styled 
 const Content = styled.div`
-  width: 100%;
+  width: calc(100% - 13rem);
   height: 100vh;
   display: flex;
   flex-direction: column;
   background: #141414;
-  padding-left: 2rem;
-  padding-bottom: 1rem;
 `;
 
 const Container = styled.div`
@@ -65,14 +73,14 @@ const ContainerTitle = styled.h1`
 
 const BoxMovies = styled.div`
   width: 100%;
-  height: auto;
-  padding: 1rem;
+  padding: .5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   box-shadow: 0px 0px 14px #FBAA30;
-  margin-top: 2rem;
+  margin-bottom: 2rem;
   position: relative;
+  z-index: 1;
 `;
 
 const ImageMovie = styled.img`
@@ -94,6 +102,7 @@ const TitleMovie = styled.h1`
   margin-left: .5rem;
   font-size: 1.3rem;
   color: #FFF;
+  z-index: 1;
 `;
 
 const Synopsis = styled.p`
@@ -101,8 +110,10 @@ const Synopsis = styled.p`
   height: 4.2rem;
   align-self: center;
   text-overflow: ellipsis;
-  overflow: hidden;
+  overflow: ${props => props.details ? 'none' : 'hidden'};
   color: #FFF;
+  font-size: ${props => props.details && '1rem'};
+  z-index: 1;
 `;
 
 const BoxAverage = styled.span`
@@ -140,6 +151,7 @@ const InputFilter = styled.input`
   margin-right: 1rem;
   padding: 0 1rem;
   border-radius: 6px;
+  color: #000;
 `;
 
 const ButtonFilter = styled.button`
@@ -163,7 +175,7 @@ const Overlay = styled.div`
   display: flex;
   flex-direction: column;
   background: #141414;
-  position: fixed;
+  position: absolute;
   top: 0%;
   left: 0;
 `;
@@ -187,14 +199,36 @@ const BoxInfo = styled.div`
   flex-direction: column;
 `;
 
-const BoxArrow = styled.div``;
+const BoxArrow = styled.div`
+  z-index: 1;
+  display: flex;
+  align-items: center;
+`;
 
 const ImageArrow = styled.img`
-  width: 50px;
+  width: 70px;
   border-radius: 50%;
   margin: 1rem;
   cursor: pointer;
 `;
+
+const BoxPoster = styled.div`
+  width: 100%;
+  height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  background: #141414;
+
+  img{
+    width: 100%;
+    height: 100%;
+    opacity: 0.5;
+  }
+`;
+
+
 
 const BoxTrailer = styled.div`
   width: 100%;
@@ -204,9 +238,51 @@ const BoxTrailer = styled.div`
   background: #FFF;
 `;
 
-const Trailer = styled.div``;
+const BoxSeasons = styled.div`
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #171717;  
+  grid-row-gap: 30px;
+  padding-bottom: 2.5rem;
+`;
 
-const Images = styled.div``;
+const Box = styled.div`
+  width: 300px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0px 0px 14px #FBAA30;
+  margin: 0 auto;
+`;
+
+const BoxInfoSeason = styled.span`
+  height: 10rem;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: space-between;
+`;
+
+const ButtonView = styled.button`
+  width: 7rem;
+  background: transparent;
+  border: 1px solid #BCBCBC80;
+  border-radius: 6px;
+  font-size: .9rem;
+  padding: .3rem;
+  margin: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+
+  :hover{
+    background: #BCBCBC80;
+    transition: .5s ease-in-out;
+  }
+`;
+
+const SeasonText = styled.h3`
+
+`;
 
 class Series extends Component{
 
@@ -217,6 +293,8 @@ class Series extends Component{
     filtered: undefined,
     hovered: false,
     isOpenDetails: false,
+    isBack: false,
+    isEpisodes: false,
   }
 
   componentDidMount() {
@@ -239,50 +317,116 @@ class Series extends Component{
 
   handleClick = (item) => {
     this.props.detailsSeriesThunk(item.id)
+    this.props.getSeasonThunk(item.id)
+    this.props.getEpisodesThunk(item.id)
+    this.props.saveId(item.id)
     this.setState({
       isOpenDetails: true,
     })
   }
 
-  renderImageDetails = () => {
-    const images = this.props.detailsSeries.map(item => {
-      return {
-        ...item,
-        backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
+  handleClickSeason = (item) => {
+    console.log('PROPS', this.props.id)
+    const data = {
+      id: item.id,
+      season: item.season_number,
+      serieId: this.props.id,
+    }
+    this.props.getEpisodesThunk(data)
+    this.isOpenEpisodes()
+  }
+
+  isCloseEpisodes = () => {
+    this.setState({
+      isEpisodes: false,
+      isOpenDetails: true,
+    })
+  }
+
+  isOpenEpisodes = () => {
+    this.setState({
+      isEpisodes: true,
+      isOpenDetails: false,
+    })
+  }
+
+  isBack = () => {
+    this.setState({ isOpenDetails: false })
+    this.props.clear()
+  }
+
+  renderSeasons = () => {
+    this.props.seasons.map(item => {
+      const images = {
         poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
       }
-      return <img src={item.backdrop_path}/>
+      return (
+        <Box>
+          <h1 style={{color: '#FFF'}}>SEASONS</h1>
+          <img src={images.poster_path}/>
+        </Box>
+      )
     })
   }
 
   renderModalDetails = () => (
     <>
       {this.props.detailsSeries.map(item => {
+        const images = {
+          ...item,
+          backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`,
+          poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+        }
         return (
           <Overlay>
+            <BoxPoster>
+              <img src={images.backdrop_path}/>    
+            </BoxPoster>
             <BoxArrow>
-              <ImageArrow src={Arrow} onClick={() => this.setState({ isOpenDetails: false })} />
+              <ImageArrow src={Arrow} onClick={this.isBack} onMouseEnter={() => this.setState({isBack: true,})} onMouseLeave={() => this.setState({isBack: false,})}/>
+              {this.state.isBack && <p>Back</p>}
             </BoxArrow>
             <Modal>
               <BoxInfoMovie>
-                <ImageMovie src={item.backdrop_path} style={{ margin: '0 1rem' }} />
+                <ImageMovie src={images.poster_path} style={{ margin: '0 1rem' }} />
                 <BoxInfo>
                   <TitleMovie>{item.original_name}</TitleMovie>
                   <Synopsis>{item.release_date}</Synopsis>
-                  <Synopsis>{item.overview}</Synopsis>
+                  <Synopsis details>{item.overview}</Synopsis>
                 </BoxInfo>
               </BoxInfoMovie>
             </Modal>
+            <BoxSeasons>
+              {this.props.seasons.map(item => {
+                console.log(item)
+                const images = {
+                  poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+                }
+                return (
+
+                  <Box>
+                    <img style={{ width: '150px', height: '100%' }} src={images.poster_path} />
+                    <BoxInfoSeason>
+                      <SeasonText style={{ color: '#FFF' }}>{item.name}</SeasonText>
+                      <SeasonText>{`Episodes ${item.episode_count}`}</SeasonText>
+                      <ButtonView onClick={() => this.handleClickSeason(item)}>View all</ButtonView>
+                    </BoxInfoSeason>
+                  </Box>
+                )
+              })}
+            </BoxSeasons>
+            
           </Overlay>
         )
-      })}}
+      })}
   </>
   )
 
   render() {
-    console.log(this.props.detailsSeries)
     return (
-      <Content> 
+      <Content>
+        {this.state.isEpisodes && 
+        <Episodes details={this.state.isOpenDetails} isEpisodes={this.state.isEpisodes} isCloseEpisodes={this.isCloseEpisodes}/>}
         {this.state.isOpenDetails ? (
           this.renderModalDetails()
         ) : (
@@ -291,10 +435,10 @@ class Series extends Component{
           <Form>
             <InputFilter 
               type="text" 
-              placeholder="buscar series" 
+              placeholder="search series" 
               onChange={this.handleChangeFilter}
             />
-            <ButtonFilter type="submit">Pesquisar</ButtonFilter>
+            <ButtonFilter type="submit">search</ButtonFilter>
           </Form>
           <Container load={this.state.load}>
             {this.state.search.length > 0 ? (
