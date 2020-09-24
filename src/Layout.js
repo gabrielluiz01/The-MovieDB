@@ -41,8 +41,8 @@ class Layout extends Component{
     return(
       <Container>
         <Sidebar changeScreen={this.changeScreen}/>
-        <Routes />
-        {/* {this.handleScreen()} */}
+        {/* <Routes /> */}
+        {this.handleScreen()}
       </Container>
     );
   }

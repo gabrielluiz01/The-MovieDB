@@ -3,6 +3,7 @@ import React, {Component} from 'react';
 import styled from 'styled-components';
 import { connect } from 'react-redux';
 import { Redirect } from 'react-router-dom' 
+import YouTube from 'react-youtube';
 
 // Api
 import api from '../api';
@@ -324,7 +325,7 @@ class Layout extends Component{
     this.props.getVideoMoviesThunk(item.id);
     this.props.getImagesMoviesThunk(item.id);
     this.props.getCastMoviesThunk(item.id)
-    return <Redirect to="/details-movies"/>
+    // return <Redirect to="/details-movies"/>
     this.setState({
       isOpenDetails: true,
     })
@@ -339,19 +340,19 @@ class Layout extends Component{
     this.props.searchMoviesThunk(search)
   }
 
-  // renderVideos = () => {
-  //   const opts = {
-  //     height: '300',
-  //     width: '500',
-  //     playerVars: {
-  //       autoplay: 0,
-  //     },
-  //     casts: this.props.castMovies.length,
-  //     showCasts: 5,
-  //   }
-  //   const video = this.props.moviesVideos
-  //   return <YouTube videoId={video.key} opts={opts}/>
-  // }
+  renderVideos = () => {
+    const opts = {
+      height: '300',
+      width: '500',
+      playerVars: {
+        autoplay: 0,
+      },
+      casts: this.props.castMovies.length,
+      showCasts: 5,
+    }
+    const video = this.props.moviesVideos
+    return <YouTube videoId={video.key} opts={opts}/>
+  }
 
   isBack = () => {
     this.setState({ isOpenDetails: false })
@@ -371,74 +372,74 @@ class Layout extends Component{
   // }
 
 
-  // renderModalDetails = () => {
-  //   const {casts, showCasts} = this.state;
-  //   const data = Array.from({length: casts},(v, k) => k);
-  //   return (
-  //     <>
-  //       {this.props.detailsMovies.map(item => {
-  //         console.log('detalhes', item)
-  //         const images = {
-  //           poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
-  //           backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`
-  //         }
-  //         return(
-  //         <Overlay>
-  //           <BoxPoster>
-  //               <img src={images.backdrop_path}/>    
-  //           </BoxPoster>  
-  //           <BoxArrow>
-  //             <ImageArrow src={Arrow} onClick={this.isBack} onMouseEnter={() => this.setState({isBack: true,})} onMouseLeave={() => this.setState({isBack: false,})}/>
-  //             {this.state.isBack && <p>Back</p>}
-  //           </BoxArrow>
-  //             <Modal>
-  //             <BoxInfoMovie>
-  //               <ImageMovie details src={images.poster_path} style={{margin: '0 1rem'}}/>
-  //               <BoxInfo>
-  //                 <TitleMovie>{item.title}</TitleMovie>
-  //                 <Synopsis>{item.release_date}</Synopsis>
-  //                 <Synopsis>{item.overview}</Synopsis>
-  //               </BoxInfo>
-  //               </BoxInfoMovie>
-  //           </Modal>
-  //           <BoxVideosImages>
-  //             <span style={{display: 'flex', flexDirection: 'column'}}>
-  //               <h1 style={{textAlign: 'center',marginBottom: '2.5rem'}}>Trailer</h1>
-  //               {this.renderVideos()}
-  //             </span>
-  //               <BoxGallery>
-  //                 {this.props.imagesMovies.map(item => {
-  //                   const gallery = {
-  //                     file_path: `https://image.tmdb.org/t/p/w500${item.file_path}`,
-  //                   }
-  //                   return (
-  //                     <ImageGallery src={gallery.file_path}/>
-  //                   )
-  //                 })}
-  //               </BoxGallery>
-  //           </BoxVideosImages>
-  //             <BoxCast>
-  //               {this.props.castMovies.map(item => {
-  //                 const images = {
-  //                   profile_path: `https://image.tmdb.org/t/p/w500${item.profile_path}`
-  //                 }
-  //                 return (
-  //                   data.slice(0, showCasts).map((casts, index) => {
-  //                     return(
-  //                     <div style={{display: 'flex', flexDirection: 'column'}}>
-  //                       <ImageCast src={images.profile_path}/>
-  //                       <NameCast>{item.name}</NameCast>
-  //                     </div>
-  //                     )
-  //                   })
-  //                 )
-  //               })}
-  //             </BoxCast>
-  //         </Overlay>
-  //       )})}
-  //     </>
-  //   )
-  // }
+  renderModalDetails = () => {
+    const {casts, showCasts} = this.state;
+    const data = Array.from({length: casts},(v, k) => k);
+    return (
+      <>
+        {this.props.detailsMovies.map(item => {
+          console.log('detalhes', item)
+          const images = {
+            poster_path: `https://image.tmdb.org/t/p/w500${item.poster_path}`,
+            backdrop_path: `https://image.tmdb.org/t/p/w500${item.backdrop_path}`
+          }
+          return(
+          <Overlay>
+            <BoxPoster>
+                <img src={images.backdrop_path}/>    
+            </BoxPoster>  
+            <BoxArrow>
+              <ImageArrow src={Arrow} onClick={this.isBack} onMouseEnter={() => this.setState({isBack: true,})} onMouseLeave={() => this.setState({isBack: false,})}/>
+              {this.state.isBack && <p>Back</p>}
+            </BoxArrow>
+              <Modal>
+              <BoxInfoMovie>
+                <ImageMovie details src={images.poster_path} style={{margin: '0 1rem'}}/>
+                <BoxInfo>
+                  <TitleMovie>{item.title}</TitleMovie>
+                  <Synopsis>{item.release_date}</Synopsis>
+                  <Synopsis>{item.overview}</Synopsis>
+                </BoxInfo>
+                </BoxInfoMovie>
+            </Modal>
+            <BoxVideosImages>
+              <span style={{display: 'flex', flexDirection: 'column'}}>
+                <h1 style={{textAlign: 'center',marginBottom: '2.5rem'}}>Trailer</h1>
+                {this.renderVideos()}
+              </span>
+                <BoxGallery>
+                  {this.props.imagesMovies.map(item => {
+                    const gallery = {
+                      file_path: `https://image.tmdb.org/t/p/w500${item.file_path}`,
+                    }
+                    return (
+                      <ImageGallery src={gallery.file_path}/>
+                    )
+                  })}
+                </BoxGallery>
+            </BoxVideosImages>
+              <BoxCast>
+                {this.props.castMovies.map(item => {
+                  const images = {
+                    profile_path: `https://image.tmdb.org/t/p/w500${item.profile_path}`
+                  }
+                  return (
+                    data.slice(0, showCasts).map((casts, index) => {
+                      return(
+                      <div style={{display: 'flex', flexDirection: 'column'}}>
+                        <ImageCast src={images.profile_path}/>
+                        <NameCast>{item.name}</NameCast>
+                      </div>
+                      )
+                    })
+                  )
+                })}
+              </BoxCast>
+          </Overlay>
+        )})}
+      </>
+    )
+  }
 
   render() {
     return (
